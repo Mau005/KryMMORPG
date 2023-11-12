@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 	"log"
 	"net"
@@ -33,14 +31,28 @@ func main() {
 
 func handleConnection(conn net.Conn) {
 	defer conn.Close()
-	test := controller.NewNetworkMessage()
-	validation := test.ReadFromSocket(conn)
-	if !validation {
+	var network controller.NetworkController
+	var protocol controller.ProtocolController
+	msg := network.RecvMessage(conn)
+	if msg != nil {
+		log.Println("Msg Nil")
 		return
+	}
+	for {
+		code := msg.GetBytes()
+		fmt.Println("Resultado: ", code)
+		switch code {
+		case 0x01:
+			if msg.ReadUint16() != 760 {
+				protocol.SendInvalidClientVersion(conn)
+			}
+		}
+		msg.Index++
 	}
 
 }
 
+/*
 func test(conn net.Conn) {
 	defer conn.Close()
 	cursor := 2
@@ -64,3 +76,4 @@ func test(conn net.Conn) {
 
 	}
 }
+*/
